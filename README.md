@@ -1,6 +1,6 @@
 # Script Loader
 
-スクリプトタグをセットするスクリプト
+<script>タグをセットするスクリプト
 
 # DEMO
 
