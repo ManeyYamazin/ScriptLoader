@@ -9,8 +9,18 @@ class ScriptLoader {
      */
     constructor() {
         this.index = 0;
-        this.srcArray = [];
+        this.tagArray = [];
         this.callback = null;
+    }
+
+    /**
+     * スタイルのソースをセットする
+     * @param {string} href ソース
+     * @param {string} [backupHref=null] ソースのロードに失敗した場合の、バックアップソース
+     * @memberof ScriptLoader
+     */
+     setStyle = (href, backupHref = null) => {
+        this.tagArray.push({ src: href, backupSrc: backupHref, tarType: 0 });
     }
 
     /**
@@ -20,18 +30,18 @@ class ScriptLoader {
      * @memberof ScriptLoader
      */
     setScript = (src, backupSrc = null) => {
-        this.srcArray.push({src:src, backupSrc:backupSrc});
+        this.tagArray.push({ src: src, backupSrc: backupSrc, tarType: 1 });
     }
-    
+
     /**
      * セットしたスクリプトのソースを、スクリプトとしてロードする
      * @param {function} [callback=null] 完了時のコールバック
      * @memberof ScriptLoader
      */
-    loadScripts = (callback = null) => {
+    load = (callback = null) => {
         this.callback = callback;
         this.index = 0;
-        this.loadScirpt(this.srcArray[this.index].src, this.srcArray[this.index].backupSrc);
+        this.loadTag(this.tagArray[this.index].src, this.tagArray[this.index].backupSrc, this.tagArray[this.index].tarType);
     };
 
     /**
@@ -40,22 +50,33 @@ class ScriptLoader {
      * @param {*} backupSrc ソースのロードに失敗した場合の、バックアップソース
      * @memberof ScriptLoader
      */
-    loadScirpt = (src, backupSrc) => {
-        let script = document.createElement('script');
-        script.src = src;
+    loadTag = (src, backupSrc, tarType) => {
+        let script;
+        switch (type) {
+            case 0:
+                script = document.createElement('link');
+                script.href = src;
+                script.rel = 'stylesheet';
+                break;
+            case 1:
+                script = document.createElement('script');
+                script.src = src;
+                break;
+        }
 
         script.addEventListener('load', {
             scriptLoader: this,
             handleEvent: function (event) {
                 this.scriptLoader.index++;
-                if (this.scriptLoader.index < this.scriptLoader.srcArray.length) {
+                if (this.scriptLoader.index < this.scriptLoader.tagArray.length) {
                     // 次のソース配列が存在する場合
-                    this.scriptLoader.loadScirpt(
-                        this.scriptLoader.srcArray[this.scriptLoader.index].src,
-                        this.scriptLoader.srcArray[this.scriptLoader.index].backupSrc);
+                    this.scriptLoader.loadTag(
+                        this.scriptLoader.tagArray[this.scriptLoader.index].src,
+                        this.scriptLoader.tagArray[this.scriptLoader.index].backupSrc,
+                        this.scriptLoader.tagArray[this.scriptLoader.index].tarType);
                 } else {
                     // 次のソース配列が存在しない場合
-                    this.scriptLoader.srcArray.length = 0;
+                    this.scriptLoader.tagArray.length = 0;
                     if (this.scriptLoader.callback && typeof this.scriptLoader.callback === 'function') {
                         this.scriptLoader.callback();
                     }
@@ -65,24 +86,26 @@ class ScriptLoader {
 
         script.addEventListener('error', {
             backupSrc: backupSrc,
+            tarType: type,
             delete: script,
             scriptLoader: this,
             handleEvent: function (event) {
                 if (this.backupSrc) {
                     // バックアップソースが設定されている場合
                     this.delete.remove();
-                    this.scriptLoader.loadScirpt(this.backupSrc, null);
+                    this.scriptLoader.loadTag(this.backupSrc, null, this.tarType);
                 } else {
                     // バックアップソースが設定されてない場合
                     this.scriptLoader.index++;
-                    if (this.scriptLoader.index < this.scriptLoader.srcArray.length) {
+                    if (this.scriptLoader.index < this.scriptLoader.tagArray.length) {
                         // 次のソース配列が存在する場合
-                        this.scriptLoader.loadScirpt(
-                            this.scriptLoader.srcArray[this.scriptLoader.index].src,
-                            this.scriptLoader.srcArray[this.scriptLoader.index].backupSrc);
+                        this.scriptLoader.loadTag(
+                            this.scriptLoader.tagArray[this.scriptLoader.index].src,
+                            this.scriptLoader.tagArray[this.scriptLoader.index].backupSrc,
+                            this.scriptLoader.tagArray[this.scriptLoader.index].tarType);
                     } else {
                         // 次のソース配列が存在しない場合
-                        this.scriptLoader.srcArray.length = 0;
+                        this.scriptLoader.tagArray.length = 0;
                         if (this.scriptLoader.callback && typeof this.scriptLoader.callback === 'function') {
                             this.scriptLoader.callback();
                         }
