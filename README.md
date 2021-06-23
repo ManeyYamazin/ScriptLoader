@@ -13,9 +13,10 @@
 <script src="scriptLoader.js"></script>
 <script>
   let loader = new ScriptLoader();
+  loader.setStyle('src/test.css');
   loader.setScript('xxxxxxxxxx/hello.js', 'src/hello.js');
   loader.setScript('src/world.js');
-  loader.loadScripts(() => {
+  loader.load(() => {
     // 読込完了時の処理
   });
 </script>
@@ -23,6 +24,7 @@
 ## xxxxxxxxxx/hello.jsが読み込めた場合
 
 ```html
+<link href="src/test.css" rel="stylesheet">
 <script src="xxxxxxxxxx/hello.js"></script>
 <script src="src/world.js"></script>
 ```
@@ -30,6 +32,7 @@
 ## xxxxxxxxxx/hello.jsが読み込めない場合
 
 ```html
+<link href="src/test.css" rel="stylesheet">
 <script src="src/hello.js"></script>
 <script src="src/world.js"></script>
 ```
